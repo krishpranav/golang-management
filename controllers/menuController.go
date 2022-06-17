@@ -3,13 +3,16 @@ package controllers
 import (
 	"context"
 	"fmt"
+
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/krishpranav/golang-management/database"
 	"github.com/krishpranav/golang-management/models"
+
+	"github.com/krishpranav/golang-management/database"
+
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -43,7 +46,7 @@ func GetMenu() gin.HandlerFunc {
 		err := foodCollection.FindOne(ctx, bson.M{"menu_id": menuId}).Decode(&menu)
 		defer cancel()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while fetching the menu items"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while fetching the menu item"})
 		}
 		c.JSON(http.StatusOK, menu)
 	}
@@ -53,14 +56,15 @@ func CreateMenu() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var menu models.Menu
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+
 		if err := c.BindJSON(&menu); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		validatonErr := validate.Struct(menu)
-		if validatonErr != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": validatonErr.Error()})
+		validationErr := validate.Struct(menu)
+		if validationErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
 			return
 		}
 
@@ -75,7 +79,6 @@ func CreateMenu() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}
-
 		defer cancel()
 		c.JSON(http.StatusOK, result)
 		defer cancel()
@@ -115,13 +118,12 @@ func UpdateMenu() gin.HandlerFunc {
 			if menu.Name != "" {
 				updateObj = append(updateObj, bson.E{"name", menu.Name})
 			}
-
 			if menu.Category != "" {
 				updateObj = append(updateObj, bson.E{"name", menu.Category})
 			}
 
 			menu.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-			updateObj = append(updateObj, bson.E{"update_at", menu.Updated_at})
+			updateObj = append(updateObj, bson.E{"updated_at", menu.Updated_at})
 
 			upsert := true
 
@@ -147,5 +149,4 @@ func UpdateMenu() gin.HandlerFunc {
 			c.JSON(http.StatusOK, result)
 		}
 	}
-
 }
