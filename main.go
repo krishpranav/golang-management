@@ -21,5 +21,8 @@ func main() {
 	routers.UserRoutes(router)
 	router.Use(middleware.Authentication())
 
+	routers.FoodRoutes(router)
+	routers.MenuRouters(router)
+
 	router.Run(":" + port)
 }
